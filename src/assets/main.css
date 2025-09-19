@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * {
+    font: inherit;
+  }
+  
+  body {
+    @apply bg-[#18181b] text-[#909176];
+  }
+  
+  input, textarea, select {
+    @apply bg-[#131516] text-current border-2 border-[#924c00] rounded-none p-2 focus:outline-none focus:ring-2 focus:ring-[#924c00];
+  }
+
+  .font-mono {
+    font-family: FiraCode Nerd Font, Fira Code, JetBrains Mono, Hack, monospace;
+  }
+
+  /* Style for devlogs text */
+  .devlogs-text {
+    font-family: 'BigBlue Nerd Font', monospace;
+  }
+
+  .terminal-blinking-cursor {
+    animation: blink 1s step-end infinite;
+    color: #ffb86c;
+  }
+
+  @keyframes blink {
+    from, to { opacity: 1; }
+    50% { opacity: 0; }
+  }
+}
