@@ -6,12 +6,14 @@
   * {
     font: inherit;
   }
-  
+
   body {
     @apply bg-[#18181b] text-[#909176];
   }
-  
-  input, textarea, select {
+
+  input,
+  textarea,
+  select {
     @apply bg-[#131516] text-current border-2 border-[#924c00] rounded-none p-2 focus:outline-none focus:ring-2 focus:ring-[#924c00];
   }
 
@@ -31,8 +33,13 @@
   }
 
   @keyframes blink {
-    from, to { opacity: 1; }
-    50% { opacity: 0; }
+    from,
+    to {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 
   /* App Layout */
@@ -98,8 +105,7 @@
   }
 
   .btn-lucky {
-    @apply px-4 py-4 bg-[#232323] border border-[#FFB86C] rounded-lg text-[#A89984] 
-           hover:bg-[#2a2a2a] transition-colors font-mono text-sm whitespace-nowrap;
+    @apply px-4 py-4 bg-[#FFB86C] text-[#232323] hover:bg-[#ffc785] border border-[#FFB86C] rounded-lg transition-colors font-mono text-sm whitespace-nowrap;
   }
 
   .select-input {
@@ -114,7 +120,7 @@
     background-size: 1.25rem;
     padding-right: 2.5rem;
   }
-  
+
   /* Remove default arrow in IE10/11 */
   .select-input::-ms-expand {
     display: none;
