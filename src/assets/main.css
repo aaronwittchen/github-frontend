@@ -15,15 +15,16 @@
     @apply bg-[#131516] text-current border-2 border-[#924c00] rounded-none p-2 focus:outline-none focus:ring-2 focus:ring-[#924c00];
   }
 
+  /* Fonts */
   .font-mono {
     font-family: FiraCode Nerd Font, Fira Code, JetBrains Mono, Hack, monospace;
   }
 
-  /* Style for devlogs text */
   .devlogs-text {
     font-family: 'BigBlue Nerd Font', monospace;
   }
 
+  /* Animations */
   .terminal-blinking-cursor {
     animation: blink 1s step-end infinite;
     color: #ffb86c;
@@ -32,5 +33,210 @@
   @keyframes blink {
     from, to { opacity: 1; }
     50% { opacity: 0; }
+  }
+
+  /* App Layout */
+  .app-container {
+    @apply min-h-screen flex flex-col px-4 sm:px-8 pb-12;
+  }
+
+  .content-container {
+    @apply w-full max-w-4xl mx-auto text-[#A89984] text-sm;
+  }
+
+  /* Header */
+  .app-header {
+    @apply flex items-center mb-6 mt-2;
+  }
+
+  .app-logo {
+    @apply w-10 h-10 sm:w-12 sm:h-12 mr-3;
+  }
+
+  .app-title {
+    @apply text-2xl sm:text-3xl font-bold font-mono text-[#e5e7eb] devlogs-text;
+  }
+
+  /* Terminal Box */
+  .terminal-box {
+    @apply border border-[#FFB86C] rounded-lg bg-[#232323] p-4 font-mono text-sm text-[#A89984] mb-6;
+  }
+
+  .terminal-prompt {
+    @apply flex items-center mb-2;
+  }
+
+  .terminal-prefix {
+    @apply text-[#ffb86c] mr-2;
+  }
+
+  .terminal-path {
+    @apply text-[#ffb86c];
+  }
+
+  .terminal-separator {
+    @apply mx-2 text-[#A89984];
+  }
+
+  .terminal-command {
+    @apply text-[#A89984];
+  }
+
+  .terminal-info {
+    @apply text-[#55e06c];
+  }
+
+  /* Form Controls */
+  .form-input {
+    @apply flex-grow w-full px-4 py-2 rounded-lg bg-[#232323] text-[#A89984] border border-[#FFB86C] 
+           focus:outline-none focus:ring-2 focus:ring-[#FFB86C] font-mono text-sm;
+  }
+
+  .btn-primary {
+    @apply px-6 py-2 bg-[#232323] border border-[#FFB86C] rounded-lg text-[#A89984] 
+           hover:bg-[#2a2a2a] transition-colors font-mono text-sm w-full sm:w-auto;
+  }
+
+  .btn-lucky {
+    @apply px-4 py-4 bg-[#232323] border border-[#FFB86C] rounded-lg text-[#A89984] 
+           hover:bg-[#2a2a2a] transition-colors font-mono text-sm whitespace-nowrap;
+  }
+
+  .select-input {
+    @apply px-3 py-4 rounded-lg bg-[#232323] text-[#A89984] border border-[#FFB86C] 
+           focus:outline-none focus:ring-2 focus:ring-[#FFB86C] font-mono text-sm appearance-none
+           transition-colors duration-200 cursor-pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FFB86C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.25rem;
+    padding-right: 2.5rem;
+  }
+  
+  /* Remove default arrow in IE10/11 */
+  .select-input::-ms-expand {
+    display: none;
+  }
+
+  /* Loading State */
+  .loading-spinner {
+    @apply inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FFB86C];
+  }
+
+  /* Error State */
+  .error-message {
+    @apply bg-[#232323] border border-[#FFB86C] rounded-lg text-[#FFB86C] px-6 py-4 mb-8 text-center font-mono text-sm;
+  }
+
+  /* Repository Card */
+  .repo-card {
+    @apply border border-[#FFB86C] rounded-lg overflow-hidden flex-1 flex flex-col min-h-0;
+  }
+
+  .repo-header {
+    @apply bg-[#2a2a2a] p-4 border-b border-[#FFB86C];
+  }
+
+  .repo-title {
+    @apply text-lg font-bold text-[#FFB86C];
+  }
+
+  .repo-description {
+    @apply text-[#A89984] mb-3;
+  }
+
+  .repo-meta {
+    @apply flex flex-wrap gap-4 text-sm;
+  }
+
+  .repo-stat {
+    @apply flex items-center;
+  }
+
+  .repo-stat-icon {
+    @apply w-4 h-4 mr-1;
+  }
+
+  .repo-language-dot {
+    @apply w-3 h-3 rounded-full mr-1;
+  }
+
+  .repo-last-updated {
+    @apply text-xs text-gray-500 mt-2;
+  }
+
+  /* Business Card */
+  .business-card {
+    @apply w-[420px] bg-[#232323] border-2 border-[#FFB86C] rounded-xl p-6 font-mono text-gray-200 shadow-lg;
+  }
+
+  .business-card-header {
+    @apply flex items-center gap-4 mb-6;
+  }
+
+  .business-avatar {
+    @apply w-20 h-20 rounded-full border-2 border-[#FFB86C] object-cover;
+  }
+
+  .business-name {
+    @apply text-2xl font-bold text-[#FFB86C];
+  }
+
+  .business-username {
+    @apply text-sm text-gray-400 hover:text-[#ffb86c] transition-colors;
+  }
+
+  .business-bio {
+    @apply mb-4 text-sm text-gray-300 leading-snug;
+  }
+
+  .stats-grid {
+    @apply grid grid-cols-3 gap-3 mb-6 text-center;
+  }
+
+  .stat-value {
+    @apply text-lg font-bold text-[#ffb86c];
+  }
+
+  .stat-label {
+    @apply text-xs text-gray-400;
+  }
+
+  .languages-container {
+    @apply mb-6;
+  }
+
+  .languages-title {
+    @apply text-sm font-semibold mb-2 text-[#dfac6b];
+  }
+
+  .languages-list {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .language-tag {
+    @apply px-2 py-0.5 text-xs border border-[#FFB86C] text-gray-300 rounded;
+  }
+
+  .last-commit {
+    @apply text-xs text-gray-400 border-t border-dashed border-[#FFB86C] pt-3;
+  }
+
+  .languages-list {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .language-tag {
+    @apply px-2 py-0.5 text-xs border border-[#FFB86C] text-gray-300 rounded;
+  }
+
+  .last-commit {
+    @apply text-xs text-gray-400 border-t border-dashed border-[#FFB86C] pt-3;
+  }
+
+  .download-btn {
+    @apply mt-6 px-6 py-2 bg-[#232323] border-2 border-[#FFB86C] text-white rounded-lg hover:bg-[#2a2a2a] transition-colors;
   }
 }

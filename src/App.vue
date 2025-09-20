@@ -1,91 +1,93 @@
 <template>
-  <div class="min-h-screen flex flex-col py-12 px-4 sm:px-8">
-    <div class="w-full max-w-4xl mx-auto text-[#A89984] text-sm">
-      <div class="flex items-center mb-6">
-        <img src="@/assets/pink.png" alt="Logo" class="w-10 h-10 sm:w-12 sm:h-12 mr-3" />
-        <h1 class="text-2xl sm:text-3xl font-bold font-mono text-[#e5e7eb] devlogs-text">
+  <div class="app-container">
+    <div class="content-container">
+      <div class="app-header">
+        <img src="@/assets/pink.png" alt="Logo" class="app-logo" />
+        <h1 class="app-title">
           devlogs<span class="terminal-blinking-cursor">█</span>
         </h1>
       </div>
       <!-- Terminal Box -->
-      <div
-        class="border border-[#FFB86C] rounded-lg bg-[#232323] p-4 font-mono text-sm text-[#A89984] mb-6"
-      >
-        <div class="flex items-center mb-2">
-          <span class="text-[#ffb86c] mr-2">Ξ</span>
-          <span class="text-[#ffb86c]">~/projects</span>
-          <span class="mx-2 text-[#A89984]">→</span>
-          <span class="text-[#A89984]">ls -la --sort=stars</span>
+      <div class="terminal-box">
+        <div class="terminal-prompt">
+          <span class="terminal-prefix">Ξ</span>
+          <span class="terminal-path">~/projects</span>
+          <span class="terminal-separator">→</span>
+          <span class="terminal-command">ls -la --sort=stars</span>
         </div>
         <div>
-          <span class="text-[#55e06c]">[INFO]</span> Displaying
-          <span class="text-[#A89984]"
-            >{{ projectCount }} projects from GitHub</span
+          <span class="terminal-info">[INFO]</span> Displaying
+          <span>
+            {{ randomRepo ? '1 project' : `${projectCount} projects` }} from GitHub</span
           >
         </div>
       </div>
       <div class="w-full mb-8">
-        <div class="flex flex-col sm:flex-row gap-4 w-full">
-          <input
-            v-model="username"
-            type="text"
-            placeholder="Enter GitHub username"
-            class="flex-grow px-4 py-2 rounded-lg bg-[#232323] text-[#A89984] border border-[#FFB86C] focus:outline-none focus:ring-2 focus:ring-[#FFB86C] font-mono text-sm w-full"
-          />
-          <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        <!-- Parent flex row with space between left & right -->
+        <div class="flex flex-col sm:flex-row justify-between gap-4 w-full">
+          <!-- LEFT SIDE: input + summary -->
+          <div class="flex flex-col sm:flex-row gap-2 sm:w-auto">
+            <input
+              v-model="username"
+              type="text"
+              placeholder="Enter GitHub username"
+              class="form-input"
+            />
             <button
               @click="getSummary"
-              class="px-6 py-2 bg-[#232323] border border-[#FFB86C] rounded-lg text-[#A89984] hover:bg-[#2a2a2a] transition-colors font-mono text-sm w-full sm:w-auto"
+              class="btn-primary"
             >
               Get Summary
             </button>
-            <div class="flex gap-2 w-full sm:w-auto">
-              <select
-                v-model="selectedRange"
-                class="flex-grow sm:flex-grow-0 px-3 py-2 rounded-lg bg-[#232323] text-[#A89984] border border-[#FFB86C] focus:outline-none focus:ring-2 focus:ring-[#FFB86C] font-mono text-sm appearance-none w-full sm:w-auto"
+          </div>
+
+          <!-- RIGHT SIDE: select + lucky -->
+          <div class="flex gap-2 w-full sm:w-auto">
+            <select
+              v-model="selectedRange"
+              class="select-input"
+            >
+              <option
+                v-for="range in starRanges"
+                :key="range.label"
+                :value="range"
               >
-                <option
-                  v-for="range in starRanges"
-                  :key="range.label"
-                  :value="range"
-                >
-                  {{ range.label }} stars
-                </option>
-              </select>
-              <button
-                @click="getRandomRepo"
-                class="px-4 py-2 bg-[#232323] border border-[#FFB86C] rounded-lg text-[#A89984] hover:bg-[#2a2a2a] transition-colors font-mono text-sm whitespace-nowrap w-full sm:w-auto"
-              >
-                I'm Feeling Lucky
-              </button>
-            </div>
+                {{ range.label }} stars
+              </option>
+            </select>
+            <button
+              @click="getRandomRepo"
+              class="btn-lucky"
+            >
+              I'm Feeling Lucky
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-12">
-        <div
-          class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
-        ></div>
+        <div class="loading-spinner"></div>
         <p class="mt-4 text-[#A89984] text-sm">Loading user data...</p>
       </div>
 
       <!-- Error State -->
-      <div
-        v-else-if="error"
-        class="bg-[#232323] border border-[#FFB86C] rounded-lg text-[#FFB86C] px-6 py-4 mb-8 text-center font-mono text-sm"
-      >
+      <div v-else-if="error" class="error-message">
         {{ error }}
       </div>
 
       <!-- Random Repo Section -->
-      <div v-if="randomRepo" class="space-y-12">
-        <div class="border border-[#FFB86C] rounded-lg overflow-hidden">
-          <div
-            class="bg-[#2a2a2a] p-4 border-b border-[#FFB86C] flex justify-between items-center"
-          >
-            <h2 class="text-lg font-bold text-[#FFB86C]">
+      <div v-if="randomRepo" class="space-y-6">
+        <div class="repo-card">
+          <div class="repo-header flex justify-between items-center">
+            <h2 class="repo-title flex items-center">
+              <svg 
+                class="mr-2 w-5 h-5 text-[#A89984]" 
+                viewBox="0 0 16 16" 
+                fill="currentColor"
+              >
+                <path fill-rule="evenodd" d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"></path>
+              </svg>
               <a
                 :href="randomRepo.htmlUrl"
                 target="_blank"
@@ -115,16 +117,16 @@
               </svg>
             </button>
           </div>
-          <div class="bg-[#232323] p-4">
+          <div class="p-4 bg-[#232323] flex-1">
             <div class="flex items-start space-x-4">
               <div class="flex-1">
-                <div v-if="randomRepo.description" class="text-[#A89984] mb-3">
+                <div v-if="randomRepo.description" class="repo-description">
                   {{ randomRepo.description }}
                 </div>
-                <div class="flex flex-wrap gap-4 text-sm">
-                  <span class="flex items-center">
+                <div class="repo-meta">
+                  <span class="repo-stat">
                     <svg
-                      class="w-4 h-4 mr-1 text-yellow-400"
+                      class="repo-stat-icon text-yellow-400"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -196,6 +198,24 @@
                 View on GitHub
               </a>
             </div>
+          </div>
+        </div>
+        <!-- README Section -->
+        <div class="border border-[#FFB86C] rounded-lg overflow-hidden flex-1 flex flex-col h-[calc(100vh-400px)] min-h-[400px]">
+          <div class="bg-[#2a2a2a] p-4 border-b border-[#FFB86C] flex-shrink-0">
+            <h2 class="text-lg font-bold text-[#FFB86C] flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              README
+            </h2>
+          </div>
+          <div class="flex-1 overflow-hidden bg-[#232323]">
+            <ReadmeViewer 
+              :owner="randomRepo.htmlUrl.split('/')[3]" 
+              :repo="randomRepo.name" 
+              class="h-full"
+            />
           </div>
         </div>
       </div>
@@ -355,8 +375,8 @@ import { defineComponent } from 'vue';
 import { githubApi } from './services/api';
 import LanguageStats from './components/LanguageStats.vue';
 import BusinessCard from './components/BusinessCard.vue';
-import BigCard from './components/BigCard.vue';
 import ContributionGraph from './components/ContributionGraph.vue';
+import ReadmeViewer from './components/ReadmeViewer.vue';
 
 interface Repository {
   name: string;
@@ -374,6 +394,10 @@ interface Repository {
   lastCommitDate?: string; // Date of the last commit
   createdAt?: string; // optional, since backend includes it
   isPrivate?: boolean; // optional, backend includes it
+  owner?: {
+    login: string;
+    htmlUrl: string;
+  };
 }
 
 interface Commit {
@@ -415,8 +439,8 @@ export default defineComponent({
   components: {
     LanguageStats,
     BusinessCard,
-    BigCard,
     ContributionGraph,
+    ReadmeViewer,
   },
   data() {
     return {
@@ -426,7 +450,8 @@ export default defineComponent({
       loading: false,
       error: '',
       starRanges: [
-        { label: '1-50', min: 1, max: 50 },
+        { label: '1-20', min: 1, max: 20 },
+        { label: '21-50', min: 21, max: 50 },
         { label: '51-500', min: 51, max: 500 },
         { label: '501-1000', min: 501, max: 1000 },
         { label: '1001-10000', min: 1001, max: 10000 },
@@ -492,6 +517,7 @@ export default defineComponent({
       try {
         this.loading = true;
         this.error = '';
+        this.randomRepo = null; // Clear current repo when loading new one
         const params = {
           minStars: this.selectedRange.min,
           maxStars: this.selectedRange.max,

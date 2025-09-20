@@ -23,6 +23,38 @@ export const githubApi = {
     }
   },
 
+  // Get repository README
+  async getRepositoryReadme(owner: string, repo: string) {
+    try {
+      console.log(`[API] Fetching README for ${owner}/${repo}`);
+      const response = await apiClient.get(`/v1/repos/${owner}/${repo}/readme`);
+      
+      // Log response summary (without the actual content to avoid cluttering the console)
+      console.log(`[API] README response received`, {
+        status: response.status,
+        hasContent: !!response.data?.content,
+        encoding: response.data?.encoding,
+        size: response.data?.size
+      });
+      
+      // Return the data directly since we're using response interceptors
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error in getRepositoryReadme:', {
+        isAxiosError: axios.isAxiosError(error),
+        status: axios.isAxiosError(error) ? error.response?.status : 'N/A',
+        message: axios.isAxiosError(error) ? 
+          (error.response?.data?.message || error.message) : 
+          'Unknown error'
+      });
+      
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch repository README');
+      }
+      throw error;
+    }
+  },
+
   // Get random repository with optional star range
   async getRandomRepository(params?: { minStars?: number; maxStars?: number }) {
     try {
