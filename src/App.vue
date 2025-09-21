@@ -1,69 +1,18 @@
 <template>
   <div class="app-container">
     <div class="content-container">
-      <div class="app-header">
-        <img src="@/assets/pink.png" alt="Logo" class="app-logo" />
-        <h1 class="app-title">
-          devlogs<span class="terminal-blinking-cursor">█</span>
-        </h1>
-      </div>
-      <!-- Terminal Box -->
-      <div class="terminal-box">
-        <div class="terminal-prompt">
-          <span class="terminal-prefix">Ξ</span>
-          <span class="terminal-path">~/projects</span>
-          <span class="terminal-separator">→</span>
-          <span class="terminal-command">ls -la --sort=stars</span>
-        </div>
-        <div>
-          <span class="terminal-info">[INFO]</span> Displaying
-          <span>
-            {{ randomRepo ? '1 project' : `${projectCount} projects` }} from GitHub</span
-          >
-        </div>
-      </div>
-      <div class="w-full mb-8">
-        <!-- Parent flex row with space between left & right -->
-        <div class="flex flex-col sm:flex-row justify-between gap-4 w-full">
-          <!-- LEFT SIDE: input + summary -->
-          <div class="flex flex-col sm:flex-row gap-2 sm:w-auto">
-            <input
-              v-model="username"
-              type="text"
-              placeholder="Enter GitHub username"
-              class="form-input"
-            />
-            <button
-              @click="getSummary"
-              class="btn-primary"
-            >
-              Get Summary
-            </button>
-          </div>
-
-          <!-- RIGHT SIDE: select + lucky -->
-          <div class="flex gap-2 w-full sm:w-auto">
-            <select
-              v-model="selectedRange"
-              class="select-input"
-            >
-              <option
-                v-for="range in starRanges"
-                :key="range.label"
-                :value="range"
-              >
-                {{ range.label }} stars
-              </option>
-            </select>
-            <button
-              @click="getRandomRepo"
-              class="btn-lucky"
-            >
-              I'm Feeling Lucky
-            </button>
-          </div>
-        </div>
-      </div>
+      <AppHeader />
+      <TerminalBox 
+        :project-count="projectCount" 
+        :random-repo="randomRepo" 
+      />
+      <ControlsSection
+        v-model:username="username"
+        v-model:selected-range="selectedRange"
+        :star-ranges="starRanges"
+        @get-summary="getSummary"
+        @get-random-repo="getRandomRepo"
+      />
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-12">
@@ -77,148 +26,11 @@
       </div>
 
       <!-- Random Repo Section -->
-      <div v-if="randomRepo" class="space-y-6">
-        <div class="repo-card">
-          <div class="repo-header flex justify-between items-center">
-            <h2 class="repo-title flex items-center">
-              <svg 
-                class="mr-2 w-5 h-5 text-[#A89984]" 
-                viewBox="0 0 16 16" 
-                fill="currentColor"
-              >
-                <path fill-rule="evenodd" d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"></path>
-              </svg>
-              <a
-                :href="randomRepo.htmlUrl"
-                target="_blank"
-                class="hover:underline"
-              >
-                {{ randomRepo.name || 'Unnamed Repository' }}
-              </a>
-            </h2>
-            <button
-              @click="randomRepo = null"
-              class="text-[#A89984] hover:text-white"
-              title="Close"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-          <div class="p-4 bg-[#232323] flex-1">
-            <div class="flex items-start space-x-4">
-              <div class="flex-1">
-                <div v-if="randomRepo.description" class="repo-description">
-                  {{ randomRepo.description }}
-                </div>
-                <div class="repo-meta">
-                  <span class="repo-stat">
-                    <svg
-                      class="repo-stat-icon text-yellow-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                      />
-                    </svg>
-                    {{ randomRepo.stars.toLocaleString() }}
-                  </span>
-                  <span class="flex items-center">
-                    <svg
-                      class="w-4 h-4 mr-1 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                      />
-                    </svg>
-                    {{ randomRepo.forks.toLocaleString() }}
-                  </span>
-                  <span v-if="randomRepo.language" class="flex items-center">
-                    <span
-                      class="w-3 h-3 rounded-full mr-1"
-                      :style="{
-                        backgroundColor: getLanguageColor(randomRepo.language),
-                      }"
-                    ></span>
-                    {{ randomRepo.language }}
-                  </span>
-                  <span class="flex items-center">
-                    <svg
-                      class="w-4 h-4 mr-1 text-red-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {{ randomRepo.openIssues.toLocaleString() }} issues
-                  </span>
-                </div>
-                <div
-                  v-if="randomRepo.lastCommitDate || randomRepo.updatedAt"
-                  class="text-xs text-gray-500 mt-2"
-                >
-                  Last commit
-                  {{
-                    formatDate(
-                      randomRepo.lastCommitDate || randomRepo.updatedAt
-                    )
-                  }}
-                </div>
-              </div>
-              <a
-                :href="randomRepo.htmlUrl"
-                target="_blank"
-                class="px-4 py-2 bg-[#FFB86C] text-[#232323] rounded hover:bg-[#ffc785] transition-colors text-sm font-medium whitespace-nowrap"
-              >
-                View on GitHub
-              </a>
-            </div>
-          </div>
-        </div>
-        <!-- README Section -->
-        <div class="border border-[#FFB86C] rounded-lg overflow-hidden flex-1 flex flex-col h-[calc(100vh-400px)] min-h-[400px]">
-          <div class="bg-[#2a2a2a] p-4 border-b border-[#FFB86C] flex-shrink-0">
-            <h2 class="text-lg font-bold text-[#FFB86C] flex items-center">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              README
-            </h2>
-          </div>
-          <div class="flex-1 overflow-hidden bg-[#232323]">
-            <ReadmeViewer 
-              :owner="randomRepo.htmlUrl.split('/')[3]" 
-              :repo="randomRepo.name" 
-              class="h-full"
-            />
-          </div>
-        </div>
-      </div>
+      <RandomRepoSection 
+        v-if="randomRepo" 
+        :repo="randomRepo" 
+        @close="randomRepo = null"
+      />
 
       <!-- User Profile -->
       <div v-else-if="user" class="space-y-12">
@@ -246,123 +58,11 @@
           <div
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-[#A89984] text-sm"
           >
-            <a
+            <RepositoryCard
               v-for="repo in user.topRepositories"
               :key="repo.name"
-              :href="repo.htmlUrl"
-              target="_blank"
-              class="block bg-[#232323] hover:bg-[#2a2a2a] rounded-lg p-4 border border-[#FFB86C] transition-all hover:shadow-lg hover:shadow-[#FFB86C]/20 font-mono"
-            >
-              <!-- Title and status row -->
-              <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-[#FFB86C]">&lt;&gt;</span>
-                  <span
-                    :class="
-                      isRecentlyUpdated(repo.updatedAt)
-                        ? 'text-yellow-400 border-yellow-400'
-                        : 'text-[#55e06c] border-[#55e06c]'
-                    "
-                    class="border px-2 py-0.5 text-xs text-[#A89984]"
-                  >
-                    {{
-                      isRecentlyUpdated(repo.updatedAt)
-                        ? 'in progress'
-                        : 'active'
-                    }}
-                  </span>
-                </div>
-                <div class="flex items-center text-[#FFB86C] text-sm">
-                  <span>★</span>
-                  <span class="ml-1">{{ repo.stars }}</span>
-                </div>
-              </div>
-
-              <!-- Repository name -->
-              <h4 class="text-lg font-semibold text-[#FFB86C] mb-2">
-                {{ repo.name }}
-              </h4>
-
-              <!-- Description -->
-              <p
-                v-if="repo.description"
-                class="text-[#A89984] text-sm mb-4 line-clamp-2"
-              >
-                {{ repo.description }}
-              </p>
-
-              <!-- Languages and Stats -->
-              <div class="space-y-3 mb-3">
-                <!-- Languages -->
-                <div v-if="repo.languages && repo.languages.length > 0" class="flex flex-wrap items-center gap-2 text-xs">
-                  <span class="text-[#A89984]">Languages:</span>
-                  <template v-for="(lang, index) in repo.languages.slice(0, 3)" :key="index">
-                    <span class="px-2 py-0.5 border border-[#FFB86C] text-gray-300">
-                      {{ lang.name }}
-                    </span>
-                  </template>
-                </div>
-                <div v-else-if="repo.language" class="flex flex-wrap items-center gap-2 text-xs">
-                  <span class="text-[#A89984]">Language:</span>
-                  <span class="px-2 py-0.5 border border-[#FFB86C] text-gray-300">
-                    {{ repo.language }}
-                  </span>
-                </div>
-
-                <!-- Stats -->
-                <div class="flex flex-wrap items-center gap-4 text-xs text-[#A89984]">
-                  <!-- Forks -->
-                  <div v-if="repo.forks !== undefined" class="flex items-center">
-                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                    {{ repo.forks }} {{ repo.forks === 1 ? 'fork' : 'forks' }}
-                  </div>
-                  
-                  <!-- Issues -->
-                  <div v-if="repo.openIssues !== undefined" class="flex items-center">
-                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h2a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                    </svg>
-                    {{ repo.openIssues }} {{ repo.openIssues === 1 ? 'issue' : 'issues' }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Divider -->
-              <div class="border-t border-dashed border-[#FFB86C] my-3"></div>
-
-              <!-- GitHub link -->
-              <div class="flex items-center justify-center mb-3">
-                <a
-                  :href="repo.htmlUrl"
-                  target="_blank"
-                  class="flex items-center text-[#FFB86C] hover:text-white transition-colors text-sm"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    class="mr-1"
-                  >
-                    <path
-                      d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-                    />
-                  </svg>
-                  <span class="underline">Code</span>
-                </a>
-              </div>
-
-              <!-- Updated date -->
-              <div
-                class="border-t border-dashed border-[#FFB86C] pt-3 text-center"
-              >
-                <p class="text-sm text-[#A89984]">
-                  Updated: {{ formatDate(repo.updatedAt) }}
-                </p>
-              </div>
-            </a>
+              :repo="repo"
+            />
           </div>
         </div>
       </div>
@@ -373,70 +73,26 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { githubApi } from './services/api';
+import AppHeader from './components/AppHeader.vue';
+import TerminalBox from './components/TerminalBox.vue';
+import ControlsSection from './components/ControlsSection.vue';
+import RandomRepoSection from './components/RandomRepoSection.vue';
+import RepositoryCard from './components/RepositoryCard.vue';
 import LanguageStats from './components/LanguageStats.vue';
 import BusinessCard from './components/BusinessCard.vue';
 import ContributionGraph from './components/ContributionGraph.vue';
 import ReadmeViewer from './components/ReadmeViewer.vue';
-
-interface Repository {
-  name: string;
-  description: string | null;
-  htmlUrl: string;
-  stars: number;
-  forks: number;
-  openIssues: number;
-  language: string | null;
-  languages?: Array<{
-    name: string;
-    percentage: number;
-  }>;
-  updatedAt: string;
-  lastCommitDate?: string; // Date of the last commit
-  createdAt?: string; // optional, since backend includes it
-  isPrivate?: boolean; // optional, backend includes it
-  owner?: {
-    login: string;
-    htmlUrl: string;
-  };
-}
-
-interface Commit {
-  message: string;
-  url: string;
-  sha: string;
-  date: string;
-}
-
-interface ContributionWeek {
-  contributionDays: Array<{
-    date: string;
-    count: number;
-  }>;
-}
-
-interface User {
-  username: string;
-  name: string | null;
-  avatarUrl: string;
-  bio: string | null;
-  githubUrl: string;
-  location?: string;
-  company?: string;
-  blog?: string;
-  followers: number;
-  following: number;
-  publicRepos: number;
-  topRepositories: Repository[];
-  languages?: Array<{ name: string; percentage: number }>;
-  lastCommit?: Commit;
-  contributions?: {
-    weeks: ContributionWeek[];
-  };
-}
+import { starRanges } from './constants/starRanges';
+import type { Repository, User } from './types';
 
 export default defineComponent({
   name: 'GithubSummary',
   components: {
+    AppHeader,
+    TerminalBox,
+    ControlsSection,
+    RandomRepoSection,
+    RepositoryCard,
     LanguageStats,
     BusinessCard,
     ContributionGraph,
@@ -449,15 +105,8 @@ export default defineComponent({
       randomRepo: null as (Repository & { htmlUrl: string }) | null,
       loading: false,
       error: '',
-      starRanges: [
-        { label: '1-20', min: 1, max: 20 },
-        { label: '21-50', min: 21, max: 50 },
-        { label: '51-500', min: 51, max: 500 },
-        { label: '501-1000', min: 501, max: 1000 },
-        { label: '1001-10000', min: 1001, max: 10000 },
-        { label: '10001+', min: 10001, max: 1000000 },
-      ] as Array<{ label: string; min: number; max: number }>,
       selectedRange: { label: '51-500', min: 51, max: 500 },
+      starRanges: starRanges, // Add starRanges to data to fix TypeScript error
     };
   },
   computed: {
@@ -466,58 +115,11 @@ export default defineComponent({
     },
   },
   methods: {
-    getLanguageColor(language: string): string {
-      const colors: Record<string, string> = {
-        JavaScript: '#f1e05a',
-        TypeScript: '#2b7489',
-        Python: '#3572A5',
-        Java: '#b07219',
-        'C++': '#f34b7d',
-        'C#': '#178600',
-        PHP: '#4F5D95',
-        Ruby: '#701516',
-        Go: '#00ADD8',
-        Rust: '#dea584',
-        Swift: '#ffac45',
-        Kotlin: '#F18E33',
-        Dart: '#00B4AB',
-        HTML: '#e34c26',
-        CSS: '#563d7c',
-        SCSS: '#c6538c',
-        Shell: '#89e051',
-        Dockerfile: '#384d54',
-        Makefile: '#427819',
-        Vue: '#2c3e50',
-        React: '#61dafb',
-        Angular: '#dd0031',
-        Svelte: '#ff3e00',
-        Elixir: '#6e4a7e',
-        Clojure: '#db5855',
-        Haskell: '#5e5086',
-        OCaml: '#3be133',
-        R: '#198CE7',
-        Scala: '#c22d40',
-        Perl: '#0298c3',
-        Lua: '#000080',
-        'Objective-C': '#438eff',
-        PowerShell: '#012456',
-        TeX: '#3D6117',
-        'Vim script': '#199f4b',
-        'Emacs Lisp': '#c065db',
-        'Jupyter Notebook': '#DA5B0B',
-        Markdown: '#083fa1',
-        JSON: '#292929',
-        YAML: '#cb171e',
-        TOML: '#9c4121',
-        GraphQL: '#e10098',
-      };
-      return colors[language] || '#cccccc';
-    },
     async getRandomRepo() {
       try {
         this.loading = true;
         this.error = '';
-        this.randomRepo = null; // Clear current repo when loading new one
+        this.randomRepo = null; 
         const params = {
           minStars: this.selectedRange.min,
           maxStars: this.selectedRange.max,
@@ -530,28 +132,6 @@ export default defineComponent({
       } finally {
         this.loading = false;
       }
-    },
-
-    isRecentlyUpdated(dateString: string): boolean {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 7; // Updated in the last 7 days
-    },
-    formatDate(dateString: string) {
-      if (!dateString) return '';
-      // Create date in UTC to avoid timezone conversion issues
-      const date = new Date(dateString);
-      // Format as UTC to prevent timezone shifting
-      return new Intl.DateTimeFormat('en-US', {
-        timeZone: 'UTC',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(date);
     },
     async getSummary() {
       if (!this.username.trim()) {

@@ -109,21 +109,35 @@
   }
 
   .select-input {
-    @apply px-3 py-4 rounded-lg bg-[#232323] text-[#A89984] border border-[#FFB86C] 
+    @apply px-3 py-4 rounded-lg bg-[#232323] text-[#A89984] border-2 border-[#FFB86C] 
            focus:outline-none focus:ring-2 focus:ring-[#FFB86C] font-mono text-sm appearance-none
            transition-colors duration-200 cursor-pointer;
+
     -webkit-appearance: none;
     -moz-appearance: none;
+    appearance: none;
+
+    /* Dropdown arrow */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FFB86C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 1.25rem;
     padding-right: 2.5rem;
+
+    /* Accent color for selected option in modern browsers */
+    accent-color: #FFB86C;
   }
 
   /* Remove default arrow in IE10/11 */
   .select-input::-ms-expand {
     display: none;
+  }
+
+  /* Fix selected highlight color on focus */
+  .select-input:focus {
+    @apply ring-2 ring-[#FFB86C] border-[#FFB86C];
+    color: #A89984;
+    background-color: #232323;
   }
 
   /* Loading State */
@@ -216,18 +230,6 @@
 
   .languages-title {
     @apply text-sm font-semibold mb-2 text-[#dfac6b];
-  }
-
-  .languages-list {
-    @apply flex flex-wrap gap-2;
-  }
-
-  .language-tag {
-    @apply px-2 py-0.5 text-xs border border-[#FFB86C] text-gray-300 rounded;
-  }
-
-  .last-commit {
-    @apply text-xs text-gray-400 border-t border-dashed border-[#FFB86C] pt-3;
   }
 
   .languages-list {
