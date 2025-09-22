@@ -16,6 +16,21 @@
           <a :href="repo.htmlUrl" target="_blank" class="hover:underline">
             {{ repo.name || 'Unnamed Repository' }}
           </a>
+          &nbsp;by&nbsp;
+          <div class="flex items-center">
+            <a :href="repo.htmlUrl.substring(0, repo.htmlUrl.lastIndexOf('/'))" target="_blank" class="hover:underline">
+              {{ repo.owner || 'Unknown' }}
+            </a>
+            <button 
+              @click.stop="$emit('search-owner', repo.owner)" 
+              class="ml-2 text-[#A89984] hover:text-white"
+              title="Search this user"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
+          </div>
         </h2>
         <button
           @click="$emit('close')"
@@ -119,13 +134,11 @@
     </div>
 
     <!-- README Section -->
-    <div
-      class="border border-[#FFB86C] rounded-lg overflow-hidden flex-1 flex flex-col h-[calc(100vh-400px)] min-h-[400px]"
-    >
+    <div class="border border-[#FFB86C] rounded-lg overflow-hidden flex flex-col flex-1">
       <div class="bg-[#2a2a2a] p-4 border-b border-[#FFB86C] flex-shrink-0">
         <h2 class="text-lg font-bold text-[#FFB86C] flex items-center">
           <svg
-            class="w-5 h-5 mr-2"
+            class="w-5 h-5 mr-2 text-[#A89984]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -157,6 +170,7 @@ import { defineComponent } from 'vue';
 import ReadmeViewer from './ReadmeViewer.vue';
 import type { Repository } from '../types';
 import { getLanguageColor } from '../utils/languages';
+import type { PropType } from 'vue';
 
 export default defineComponent({
   name: 'RandomRepoSection',
@@ -165,14 +179,22 @@ export default defineComponent({
   },
   props: {
     repo: {
-      type: Object as () => Repository & { htmlUrl: string },
+      type: Object as PropType<Repository>,
       required: true,
     },
   },
-  emits: ['close'],
+  emits: ['close', 'search-owner'],
   methods: {
     getLanguageColor,
-    FormData,
+    formatDate(dateString: string): string {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }).format(date);
+    },
   },
 });
 </script>

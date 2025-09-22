@@ -22,11 +22,6 @@ export default defineComponent({
   margin-bottom: 2rem;
 }
 
-.app-logo {
-  height: 40px;
-  margin-right: 1rem;
-}
-
 .app-title {
   font-size: 1.8rem;
   font-weight: bold;
@@ -36,7 +31,6 @@ export default defineComponent({
 
 .terminal-blinking-cursor {
   animation: blink 1s step-end infinite;
-  color: #50fa7b;
 }
 
 @keyframes blink {

@@ -2,5 +2,17 @@ const { defineConfig } = require('@vue/cli-service');
 
 module.exports = defineConfig({
   transpileDependencies: true,
-  lintOnSave: 'warning' // Show lint errors as warnings during development
+  lintOnSave: 'warning', // Show lint errors as warnings during development
+  chainWebpack: (config) => {
+    // Add file-loader for images
+    config.module
+      .rule('images')
+      .test(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/)
+      .use('file-loader')
+      .loader('file-loader')
+      .options({
+        name: 'img/[name].[hash:8].[ext]',
+        esModule: false
+      });
+  }
 });

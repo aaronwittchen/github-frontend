@@ -30,6 +30,7 @@
         v-if="randomRepo" 
         :repo="randomRepo" 
         @close="randomRepo = null"
+        @search-owner="searchOwner"
       />
 
       <!-- User Profile -->
@@ -81,7 +82,6 @@ import RepositoryCard from './components/RepositoryCard.vue';
 import LanguageStats from './components/LanguageStats.vue';
 import BusinessCard from './components/BusinessCard.vue';
 import ContributionGraph from './components/ContributionGraph.vue';
-import ReadmeViewer from './components/ReadmeViewer.vue';
 import { starRanges } from './constants/starRanges';
 import type { Repository, User } from './types';
 
@@ -96,17 +96,22 @@ export default defineComponent({
     LanguageStats,
     BusinessCard,
     ContributionGraph,
-    ReadmeViewer,
   },
   data() {
     return {
       username: '',
       user: null as User | null,
       randomRepo: null as (Repository & { htmlUrl: string }) | null,
+      preFetchedRepos: [] as (Repository & { htmlUrl: string })[],
+      isPreFetching: false,
       loading: false,
       error: '',
       selectedRange: { label: '51-500', min: 51, max: 500 },
-      starRanges: starRanges, // Add starRanges to data to fix TypeScript error
+      starRanges: starRanges,
+      lastFetchTime: 0,
+      minRequestInterval: 2000, // Minimum time between requests in milliseconds (2 seconds)
+      fetchQueue: [] as Array<() => Promise<void>>,
+      isProcessingQueue: false,
     };
   },
   computed: {
@@ -114,18 +119,109 @@ export default defineComponent({
       return this.user?.topRepositories?.length || 0;
     },
   },
+  mounted() {
+    // Pre-fetch 2 repos when component is mounted
+    this.preFetchNextRepo();
+    this.preFetchNextRepo();
+  },
   methods: {
+    async processQueue() {
+      if (this.isProcessingQueue || this.fetchQueue.length === 0) return;
+      
+      this.isProcessingQueue = true;
+      const now = Date.now();
+      const timeSinceLastFetch = now - this.lastFetchTime;
+      const delay = Math.max(0, this.minRequestInterval - timeSinceLastFetch);
+      
+      // Wait for the required delay
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      const nextRequest = this.fetchQueue.shift();
+      if (nextRequest) {
+        try {
+          await nextRequest();
+        } catch (error) {
+          console.error('Error in queued request:', error);
+        } finally {
+          this.lastFetchTime = Date.now();
+        }
+      }
+      
+      this.isProcessingQueue = false;
+      
+      // Process next item in queue if any
+      if (this.fetchQueue.length > 0) {
+        this.processQueue();
+      }
+    },
+    
+    enqueueRequest(request: () => Promise<void>): Promise<void> {
+      return new Promise((resolve, reject) => {
+        const wrappedRequest = async () => {
+          try {
+            await request();
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        };
+        
+        this.fetchQueue.push(wrappedRequest);
+        this.processQueue();
+      });
+    },
+    
+    searchOwner(owner: string) {
+      this.username = owner;
+      this.getSummary();
+    },
+    
+    async preFetchNextRepo() {
+      if (this.isPreFetching || this.preFetchedRepos.length >= 2) return;
+      
+      this.isPreFetching = true;
+      try {
+        await this.enqueueRequest(async () => {
+          const params = {
+            minStars: this.selectedRange.min,
+            maxStars: this.selectedRange.max,
+          };
+          const repo = await githubApi.getRandomRepository(params);
+          this.preFetchedRepos.push(repo);
+        });
+      } catch (error) {
+        console.error('Error pre-fetching repository:', error);
+      } finally {
+        this.isPreFetching = false;
+      }
+    },
     async getRandomRepo() {
       try {
         this.loading = true;
         this.error = '';
-        this.randomRepo = null; 
-        const params = {
-          minStars: this.selectedRange.min,
-          maxStars: this.selectedRange.max,
-        };
-        const repo = await githubApi.getRandomRepository(params);
-        this.randomRepo = repo;
+        this.randomRepo = null;
+        this.user = null; // Clear user data when getting a random repo
+
+        // If we have pre-fetched repos, use one of them
+        if (this.preFetchedRepos.length > 0) {
+          this.randomRepo = this.preFetchedRepos.shift() || null;
+          // Start pre-fetching the next repo in the background
+          this.preFetchNextRepo();
+          return;
+        }
+
+        // No pre-fetched repos, fetch one immediately
+        await this.enqueueRequest(async () => {
+          const params = {
+            minStars: this.selectedRange.min,
+            maxStars: this.selectedRange.max,
+          };
+          const repo = await githubApi.getRandomRepository(params);
+          this.randomRepo = repo;
+          
+          // Pre-fetch the next repo in the background
+          this.preFetchNextRepo();
+        });
       } catch (error) {
         console.error('Error fetching random repository:', error);
         this.error = 'Failed to fetch a random repository. Please try again.';
@@ -142,6 +238,7 @@ export default defineComponent({
       this.loading = true;
       this.error = '';
       this.randomRepo = null;
+      this.user = null; // Clear user data when starting a new search
 
       try {
         this.user = await githubApi.getUserSummary(this.username);

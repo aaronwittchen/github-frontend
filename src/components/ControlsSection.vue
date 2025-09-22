@@ -4,13 +4,16 @@
       <!-- LEFT SIDE: input + summary -->
       <div class="flex flex-col sm:flex-row gap-2 sm:w-auto">
         <input
-          :value="username"
-          @input="$emit('update:username', $event.target.value)"
           type="text"
           placeholder="Enter GitHub username"
           class="form-input"
+          :value="username"
+          @input="handleUsernameInput"
         />
-        <button @click="$emit('getSummary')" class="btn-primary">
+        <button 
+          class="btn-primary"
+          @click="$emit('getSummary')"
+        >
           Get Summary
         </button>
       </div>
@@ -18,14 +21,9 @@
       <!-- RIGHT SIDE: select + lucky -->
       <div class="flex gap-2 w-full sm:w-auto">
         <select
-          :value="selectedRange"
-          @change="
-            $emit(
-              'update:selectedRange',
-              starRanges.find((range) => range.label === $event.target.value)
-            )
-          "
           class="select-input"
+          :value="selectedRange?.label"
+          @change="handleRangeChange($event)"
         >
           <option
             v-for="range in starRanges"
@@ -35,7 +33,10 @@
             {{ range.label }} stars
           </option>
         </select>
-        <button @click="$emit('getRandomRepo')" class="btn-lucky">
+        <button 
+          class="btn-lucky"
+          @click="$emit('getRandomRepo')"
+        >
           I'm Feeling Lucky
         </button>
       </div>
@@ -55,12 +56,21 @@ export default defineComponent({
       required: true,
     },
     selectedRange: {
-      type: Object as () => StarRange,
+      type: Object as () => StarRange | null,
       required: true,
     },
     starRanges: {
       type: Array as () => StarRange[],
       required: true,
+      validator: (value: StarRange[]) => {
+        return value.every(range => 
+          range && 
+          typeof range === 'object' && 
+          'label' in range && 
+          'min' in range && 
+          'max' in range
+        );
+      }
     },
   },
   emits: [
@@ -69,5 +79,23 @@ export default defineComponent({
     'getSummary',
     'getRandomRepo',
   ],
+  methods: {
+    handleUsernameInput(event: Event): void {
+      const target = event.target as HTMLInputElement;
+      if (target) {
+        this.$emit('update:username', target.value);
+      }
+    },
+    handleRangeChange(event: Event): void {
+      const target = event.target as HTMLSelectElement;
+      if (target) {
+        const selectedLabel = target.value;
+        const selectedRange = this.starRanges.find(range => range.label === selectedLabel);
+        if (selectedRange) {
+          this.$emit('update:selectedRange', selectedRange);
+        }
+      }
+    }
+  },
 });
 </script>

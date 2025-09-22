@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from "vue";
+import { ref, onMounted, watch, computed, defineProps } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 // import { githubApi } from "@/services/api"; // Uncomment when using
@@ -57,8 +57,8 @@ import DOMPurify from "dompurify";
 marked.setOptions({
   gfm: true,
   breaks: true,
-  headerIds: true,
-  mangle: false,
+  // Ensure proper handling of non-ASCII characters
+  silent: false
 });
 
 const props = defineProps<{
@@ -70,11 +70,15 @@ const readmeContent = ref("");
 const isLoading = ref(false);
 const error = ref("");
 
-const readmeHtml = computed(() => {
-  if (!readmeContent.value) return "";
+const readmeHtml = ref("");
+
+// Function to parse markdown asynchronously
+const parseMarkdown = async (content: string) => {
+  if (!content) return "";
   
   try {
-    const rawHtml = marked(readmeContent.value);
+    const rawHtml = await marked.parse(content);
+    // Configure DOMPurify to handle Chinese characters properly
     return DOMPurify.sanitize(rawHtml, {
       ALLOWED_TAGS: [
         "h1", "h2", "h3", "h4", "h5", "h6", "p", "a", "ul", "ol", "li", 
@@ -86,22 +90,31 @@ const readmeHtml = computed(() => {
         "href", "src", "alt", "title", "class", "id", "width", "height", 
         "align", "type", "checked", "disabled", "start", "reversed"
       ],
+      // Preserve text content including Chinese characters
+      KEEP_CONTENT: true,
+      // Allow data attributes that might be used for i18n
+      ADD_ATTR: ['data-*'],
+      // Preserve text content when sanitizing
+      RETURN_DOM: false,
+      RETURN_DOM_FRAGMENT: false,
+      // Allow HTML entities
+      ALLOW_UNKNOWN_PROTOCOLS: true
     });
   } catch (err) {
     console.error("Error parsing markdown:", err);
     return `<pre class="text-[#f85149]">Error parsing markdown: ${err instanceof Error ? err.message : 'Unknown error'}</pre>`;
   }
-});
-
-// Copy to clipboard functionality
-const copyToClipboard = async () => {
-  try {
-    await navigator.clipboard.writeText(readmeContent.value);
-    // You could add a toast notification here
-  } catch (err) {
-    console.error("Failed to copy to clipboard:", err);
-  }
 };
+
+// Watch for content changes and parse markdown
+watch(readmeContent, async (newContent) => {
+  if (newContent) {
+    readmeHtml.value = await parseMarkdown(newContent);
+  } else {
+    readmeHtml.value = "";
+  }
+}, { immediate: true });
+
 
 // Fetch README from backend
 const fetchReadme = async () => {
@@ -121,48 +134,36 @@ const fetchReadme = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const responseText = await response.text();
-    let readmeData;
+    // Get the content type to handle both JSON and plain text responses
+    const contentType = response.headers.get('content-type') || '';
     
-    try {
-      // Try to parse as JSON first
-      readmeData = JSON.parse(responseText);
-    } catch (e) {
-      // If not JSON, use the raw text as content
-      readmeContent.value = responseText;
-      return;
-    }
-    
-    // If we have JSON data, process it
-    if (readmeData) {
-      // Handle different response formats from your backend
-      if (readmeData.content && typeof readmeData.content === "string") {
-        // If content is base64 encoded
-        if (readmeData.encoding === "base64") {
-          try {
-            const base64Content = readmeData.content.replace(/\s/g, "");
-            readmeContent.value = atob(base64Content);
-          } catch (decodeError) {
-            console.warn("Failed to decode base64, using raw content:", decodeError);
-            readmeContent.value = readmeData.content;
-          }
-        } else {
-          // Plain text content
-          readmeContent.value = readmeData.content;
-        }
-      } else if (typeof readmeData === "string") {
-        // If the entire response is the README content
-        readmeContent.value = readmeData;
-      } else if (readmeData.data && typeof readmeData.data === "string") {
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      if (data.content) {
+        // If content is base64 encoded (common in GitHub API)
+        const content = typeof data.content === 'string' 
+          ? atob(data.content.replace(/\s/g, '')) 
+          : JSON.stringify(data.content, null, 2);
+        readmeContent.value = content;
+      } else if (data.data && typeof data.data === 'string') {
         // If content is nested in a data property
-        readmeContent.value = readmeData.data;
+        readmeContent.value = data.data;
+      } else if (typeof data === 'string') {
+        // If the response is a string
+        readmeContent.value = data;
       } else {
-        // If we have JSON but can't extract content, show the raw response
-        readmeContent.value = responseText;
+        // Fallback to stringify the whole response
+        readmeContent.value = JSON.stringify(data, null, 2);
       }
+    } else {
+      // Handle plain text response
+      const buffer = await response.arrayBuffer();
+      // Use TextDecoder with 'utf-8' to properly handle Chinese characters
+      const decoder = new TextDecoder('utf-8');
+      readmeContent.value = decoder.decode(buffer);
     }
 
-    if (!readmeContent.value.trim()) {
+    if (!readmeContent.value || !readmeContent.value.trim()) {
       throw new Error("README file is empty");
     }
   } catch (err) {
