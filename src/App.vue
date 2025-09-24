@@ -5,11 +5,13 @@
       <TerminalBox 
         :project-count="projectCount" 
         :random-repo="randomRepo"
-        :selected-language="languageFilter" 
+        :selected-language="languageFilter"
+        :selected-country="country"
       />
       <ControlsSection
         v-model:username="username"
         v-model:selected-range="selectedRange"
+        v-model:country="country"
         @update:language="languageFilter = $event"
         :star-ranges="starRanges"
         @get-summary="getSummary"
@@ -74,7 +76,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { githubApi } from './services/api';
 import AppHeader from './components/AppHeader.vue';
 import TerminalBox from './components/TerminalBox.vue';
@@ -108,7 +110,7 @@ export default defineComponent({
       isPreFetching: false,
       loading: false,
       error: '',
-      selectedRange: { label: '51-500', min: 51, max: 500 },
+      selectedRange: { label: 'Any', min: 0, max: 1000000 },
       starRanges: starRanges,
       // Prefetch and cancellation control
       prefetchVersion: 0,
@@ -120,6 +122,7 @@ export default defineComponent({
       fetchQueue: [] as Array<() => Promise<void>>,
       isProcessingQueue: false,
       languageFilter: '' as string | null,
+      country: '' as string | null,
     };
   },
   computed: {
@@ -222,6 +225,7 @@ export default defineComponent({
           minStars: this.selectedRange?.min,
           maxStars: this.selectedRange?.max,
           language: this.languageFilter || undefined,
+          country: this.country || undefined,
         };
         const repo = await githubApi.getRandomRepository(params, { signal: controller.signal });
         // Ignore if a newer prefetch cycle has started
@@ -259,6 +263,7 @@ export default defineComponent({
           minStars: this.selectedRange?.min,
           maxStars: this.selectedRange?.max,
           language: this.languageFilter || undefined,
+          country: this.country || undefined,
         };
         const repo = await githubApi.getRandomRepository(params, { signal: immediateController.signal });
         this.randomRepo = repo;
@@ -270,6 +275,8 @@ export default defineComponent({
         
         if (errorMessage.includes('ThrottlerException') || statusCode === 429) {
           this.error = 'Rate limit exceeded. Please wait a moment before trying again.';
+        } else if (errorMessage.includes('No repositories found')) {
+          this.error = 'No repositories found matching the criteria. Please try different filters.';
         } else {
           this.error = 'Failed to fetch a random repository. Please try again.';
         }

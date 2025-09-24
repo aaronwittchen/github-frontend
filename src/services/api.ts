@@ -59,7 +59,7 @@ export const githubApi = {
 
   // Get random repository with optional star range
   async getRandomRepository(
-    params?: { minStars?: number; maxStars?: number; language?: string },
+    params?: { minStars?: number; maxStars?: number; language?: string; country?: string },
     options?: { signal?: AbortSignal }
   ) {
     try {
@@ -68,6 +68,7 @@ export const githubApi = {
           min_stars: params?.minStars,
           max_stars: params?.maxStars,
           language: params?.language,
+          country: params?.country,
         },
         signal: options?.signal
       });

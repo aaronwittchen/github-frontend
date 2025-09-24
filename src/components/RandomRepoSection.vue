@@ -21,6 +21,7 @@
             <a :href="repo.htmlUrl.substring(0, repo.htmlUrl.lastIndexOf('/'))" target="_blank" class="hover:underline">
               {{ repo.owner || 'Unknown' }}
             </a>
+            <span v-if="repo.ownerLocation" class="ml-2 text-xs text-gray-400">({{ repo.ownerLocation }})</span>
             <button 
               @click.stop="$emit('search-owner', repo.owner)" 
               class="ml-2 text-[#A89984] hover:text-white"

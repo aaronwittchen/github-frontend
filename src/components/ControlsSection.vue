@@ -1,54 +1,88 @@
 <template>
   <div class="w-full mb-8">
-    <div class="flex flex-col sm:flex-row justify-between gap-4 w-full">
-      <!-- LEFT SIDE: input + summary -->
-      <div class="flex flex-col sm:flex-row gap-2 sm:w-auto">
+    <!-- Input and Get Summary button in their own row on small screens -->
+    <div class="flex flex-col sm:flex-row gap-4 w-full mb-4">
+      <div class="flex w-full gap-2 h-14">
         <input
           type="text"
           placeholder="Enter GitHub username"
-          class="form-input"
+          class="form-input flex-1 h-full"
           :value="username"
           @input="handleUsernameInput"
         />
         <button 
-          class="btn-primary"
+          class="btn-primary whitespace-nowrap h-full px-4"
           @click="$emit('getSummary')"
         >
           Get Summary
         </button>
       </div>
+    </div>
 
-      <!-- RIGHT SIDE: language dropdown + star range + lucky -->
-      <div class="flex gap-2 w-full sm:w-auto">
-        <select
-          class="select-input flex-1 min-w-[160px]"
-          :value="languageFilterLabel"
-          @change="handleLanguageChange($event)"
-        >
-          <option value="Any">Any language</option>
-          <option v-for="opt in allLanguages" :key="opt" :value="opt">{{ opt }}</option>
-        </select>
-        <select
-          class="select-input"
-          :value="selectedRangeLabel"
-          @change="handleRangeChange($event)"
-        >
-          <option value="Any">Any stars</option>
+    <!-- Filters and Lucky button in their own row on small screens -->
+    <div class="flex flex-col sm:flex-row gap-2 w-full">
+      <!-- Language Dropdown - full width on mobile, flexible on larger screens -->
+      <select
+        class="select-input w-full sm:flex-1 sm:min-w-[160px]"
+        :value="languageFilterLabel"
+        @change="handleLanguageChange($event)"
+      >
+        <option value="Any">Any language</option>
+        <optgroup label="Most Searched">
           <option
-            v-for="range in starRanges"
-            :key="range.label"
-            :value="range.label"
+            v-for="lang in mostSearchedLanguages"
+            :key="lang"
+            :value="lang"
           >
-            {{ range.label }} stars
+            {{ lang }}
           </option>
-        </select>
-        <button 
-          class="btn-lucky"
-          @click="$emit('getRandomRepo')"
+        </optgroup>
+        <optgroup label="Others">
+          <option
+            v-for="lang in otherLanguages"
+            :key="lang"
+            :value="lang"
+          >
+            {{ lang }}
+          </option>
+        </optgroup>
+      </select>
+
+      <!-- Star Range - full width on mobile, auto width on larger screens -->
+      <select
+        class="select-input w-full sm:w-auto"
+        :value="selectedRangeLabel"
+        @change="handleRangeChange($event)"
+      >
+        <option value="Any">Any stars</option>
+        <option
+          v-for="range in starRanges"
+          :key="range.label"
+          :value="range.label"
         >
-          I'm Feeling Lucky
-        </button>
-      </div>
+          {{ range.label }} stars
+        </option>
+      </select>
+
+      <!-- Country - full width on mobile, flexible on larger screens -->
+      <select
+        class="select-input w-full sm:flex-1 sm:min-w-[140px]"
+        :value="countryFilterLabel"
+        @change="handleCountryChange($event)"
+      >
+        <option value="Any">Any country</option>
+        <option v-for="country in countryList" :key="country" :value="country">
+          {{ country }}
+        </option>
+      </select>
+
+      <!-- Lucky Button - full width on mobile, auto width on larger screens -->
+      <button 
+        class="btn-lucky w-full sm:w-auto whitespace-nowrap"
+        @click="$emit('getRandomRepo')"
+      >
+        I'm Feeling Lucky
+      </button>
     </div>
   </div>
 </template>
@@ -58,6 +92,22 @@ import { defineComponent } from 'vue';
 import type { StarRange } from '../types';
 import { languageColors } from '../utils/languages';
 
+const mostSearchedLanguages: string[] = [
+  'C', 'C++', 'C#', 'Java', 'Python', 'Go', 'Rust',
+  'Ruby', 'PHP', 'Kotlin', 'Swift', 'Dart',
+  'TypeScript', 'JavaScript',
+  'HTML', 'CSS', 'Vue', 'React', 'Angular', 'Svelte'
+];
+
+const countryList: string[] = [
+  'Australia', 'Austria', 'Belgium', 'Brazil', 'Canada', 
+  'China', 'Denmark', 'Finland', 'France', 'Germany',
+  'India', 'Indonesia', 'Ireland', 'Israel', 'Italy',
+  'Japan', 'Mexico', 'Netherlands', 'New Zealand', 'Norway',
+  'Poland', 'Russia', 'Singapore', 'South Africa', 'South Korea',
+  'Spain', 'Sweden', 'Switzerland', 'Turkey', 'United Kingdom', 'United States'
+];
+
 export default defineComponent({
   name: 'ControlsSection',
   props: {
@@ -66,45 +116,56 @@ export default defineComponent({
       required: true,
     },
     selectedRange: {
-      type: Object as () => StarRange | null,
+      type: Object as () => { label: string; min: number; max: number } | null,
       required: true,
     },
     starRanges: {
-      type: Array as () => StarRange[],
+      type: Array as () => Array<{ label: string; min: number; max: number }>,
       required: true,
-      validator: (value: StarRange[]) => {
-        return value.every(range => 
-          range && 
-          typeof range === 'object' && 
-          'label' in range && 
-          'min' in range && 
-          'max' in range
-        );
-      }
+    },
+    country: {
+      type: String,
+      default: '',
     },
   },
   emits: [
     'update:username',
     'update:selectedRange',
     'update:language',
+    'update:country',
     'getSummary',
     'getRandomRepo',
   ],
   data() {
     return {
       languageFilter: '',
+      countryFilter: this.country || '',
+      countryList,
     };
   },
+  watch: {
+    country(newVal) {
+      this.countryFilter = newVal || '';
+    },
+  },
   computed: {
-    allLanguages(): string[] {
-      return Object.keys(languageColors).sort((a, b) => a.localeCompare(b));
+    mostSearchedLanguages(): string[] {
+      return mostSearchedLanguages.filter(lang => lang in languageColors);
+    },
+    otherLanguages(): string[] {
+      return Object.keys(languageColors)
+        .filter(lang => !mostSearchedLanguages.includes(lang))
+        .sort((a, b) => a.localeCompare(b));
     },
     languageFilterLabel(): string {
       return this.languageFilter || 'Any';
     },
     selectedRangeLabel(): string {
       return this.selectedRange?.label || 'Any';
-    }
+    },
+    countryFilterLabel(): string {
+      return this.countryFilter || 'Any';
+    },
   },
   methods: {
     handleUsernameInput(event: Event): void {
@@ -138,7 +199,19 @@ export default defineComponent({
           }
         }
       }
-    }
+    },
+    handleCountryChange(event: Event): void {
+      const target = event.target as HTMLSelectElement;
+      if (!target) return;
+      const value = target.value;
+      if (value === 'Any') {
+        this.countryFilter = '';
+        this.$emit('update:country', null);
+      } else {
+        this.countryFilter = value;
+        this.$emit('update:country', value);
+      }
+    },
   },
 });
 </script>

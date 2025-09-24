@@ -20,6 +20,7 @@ export interface Repository {
     login: string;
     htmlUrl: string;
   };
+  ownerLocation?: string | null;
 }
 
 export interface Commit {

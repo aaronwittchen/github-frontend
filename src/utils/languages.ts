@@ -1,51 +1,35 @@
-// src/utils/languages.ts
+import colorsData from './colors.json';
 
-export const languageColors: Record<string, string> = {
-  JavaScript: '#f1e05a',
-  TypeScript: '#3178c6',
-  Python: '#3572A5',
-  Java: '#b07219',
-  'C++': '#f34b7d',
-  C: '#555555',
-  'C#': '#178600',
-  PHP: '#4F5D95',
-  Ruby: '#701516',
-  Go: '#00ADD8',
-  Rust: '#dea584',
-  Swift: '#F05138',
-  Kotlin: '#A97BFF',
-  Dart: '#00B4AB',
-  'Jupyter Notebook': '#DA5B0B',
-  HTML: '#e34c26',
-  CSS: '#563d7c',
-  SCSS: '#c6538c',
-  Less: '#1d365d',
-  'Vue.js': '#41b883',
-  'Vue': '#41b883',
-  React: '#61dafb',
-  Angular: '#dd0031',
-  Svelte: '#ff3e00',
-  Elixir: '#6e4a7e',
-  Clojure: '#db5855',
-  Haskell: '#5e5086',
-  OCaml: '#3be133',
-  R: '#198CE7',
-  Scala: '#c22d40',
-  Perl: '#0298c3',
-  Lua: '#000080',
-  'Objective-C': '#438eff',
-  PowerShell: '#012456',
-  TeX: '#3D6117',
-  'Vim script': '#199f4b',
-  'Emacs Lisp': '#c065db',
-  Markdown: '#083fa1',
-  JSON: '#292929',
-  YAML: '#cb171e',
-  TOML: '#9c4121',
-  GraphQL: '#e10098',
-};
+export const languageColors: Record<string, string> = Object.fromEntries(
+  Object.entries(colorsData)
+    .filter(([_, data]) => data.color)
+    .map(([language, data]) => [language, data.color!]),
+);
 
 export function getLanguageColor(language: string | null): string {
   if (!language) return '#cccccc';
   return languageColors[language] || '#cccccc';
 }
+
+// Define most searched languages
+export const mostSearchedLanguages: string[] = [
+  'C',
+  'C++',
+  'C#',
+  'Java',
+  'Python',
+  'Go',
+  'Rust',
+  'Ruby',
+  'PHP',
+  'Kotlin',
+  'Swift',
+  'Dart',
+  'TypeScript',
+  'JavaScript',
+];
+
+// Compute others dynamically from colorsData, excluding most searched
+export const otherLanguages: string[] = Object.keys(colorsData)
+  .filter((lang) => !mostSearchedLanguages.includes(lang))
+  .sort(); // optional alphabetical sort
