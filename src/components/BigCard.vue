@@ -84,8 +84,8 @@
                   Repositories
                 </p>
                 <p class="text-lg font-bold text-[#ffb86c]">
-                  <AnimatedCounter 
-                    :value="user?.publicRepos ?? 0" 
+                  <AnimatedCounter
+                    :value="user?.publicRepos ?? 0"
                     text-class="text-lg font-bold text-[#ffb86c]"
                   />
                 </p>
@@ -95,8 +95,8 @@
               <div class="bg-[#18181b] p-4 rounded border border-[#FFB86C]/50">
                 <p class="text-sm font-semibold text-[#dfac6b] mb-2">Stars</p>
                 <p class="text-lg font-bold text-[#ffb86c]">
-                  <AnimatedCounter 
-                    :value="totalStars" 
+                  <AnimatedCounter
+                    :value="totalStars"
                     text-class="text-lg font-bold text-[#ffb86c]"
                   />
                 </p>
@@ -106,11 +106,17 @@
 
           <!-- Contributions Streak -->
           <div class="mt-6">
-            <p class="text-sm font-semibold text-[#dfac6b] mb-3">Contributions</p>
+            <p class="text-sm font-semibold text-[#dfac6b] mb-3">
+              Contributions
+            </p>
             <div class="flex items-end gap-1">
-              <div v-for="(week, weekIndex) in contributionWeeks" :key="weekIndex" class="flex flex-col gap-1">
-                <div 
-                  v-for="(day, dayIndex) in week" 
+              <div
+                v-for="(week, weekIndex) in contributionWeeks"
+                :key="weekIndex"
+                class="flex flex-col gap-1"
+              >
+                <div
+                  v-for="(day, dayIndex) in week"
                   :key="dayIndex"
                   class="w-3 h-3 rounded-sm"
                   :class="getContributionColor(day.count)"
@@ -173,14 +179,14 @@ interface User {
   following: number;
   publicRepos: number;
   topRepositories: Repository[];
-  languages?: Array<{name: string, percentage: number}>;
+  languages?: Array<{ name: string; percentage: number }>;
   lastCommit?: Commit;
 }
 
 export default defineComponent({
   name: 'BigCard',
   components: {
-    AnimatedCounter
+    AnimatedCounter,
   },
   props: {
     user: {
@@ -194,7 +200,7 @@ export default defineComponent({
           'following' in user &&
           'avatarUrl' in user
         );
-      }
+      },
     },
   },
   setup(props) {
@@ -204,28 +210,28 @@ export default defineComponent({
     const contributionWeeks = computed(() => {
       const weeks = [];
       const today = new Date();
-      
+
       // Generate 52 weeks of data
       for (let week = 0; week < 52; week++) {
         const weekData = [];
-        
+
         // Generate 7 days for each week (Sun-Sat)
         for (let day = 0; day < 7; day++) {
           const date = new Date(today);
-          date.setDate(date.getDate() - (week * 7) - (6 - day));
-          
+          date.setDate(date.getDate() - week * 7 - (6 - day));
+
           // Random count for demo (replace with actual data)
           const count = Math.floor(Math.random() * 10);
-          
+
           weekData.push({
             date: date.toISOString().split('T')[0],
-            count: count > 3 ? count - 3 : count // Make some days empty for realism
+            count: count > 3 ? count - 3 : count, // Make some days empty for realism
           });
         }
-        
+
         weeks.push(weekData);
       }
-      
+
       return weeks;
     });
 
@@ -239,20 +245,22 @@ export default defineComponent({
 
     const formatContributionDate = (dateString: string) => {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
       });
     };
 
     const totalStars = computed(() => {
       if (!props.user?.topRepositories) return 0;
-      return props.user.topRepositories?.reduce(
-        (sum: number, repo: Repository) => sum + (repo.stars || 0),
-        0
-      ) || 0;
+      return (
+        props.user.topRepositories?.reduce(
+          (sum: number, repo: Repository) => sum + (repo.stars || 0),
+          0,
+        ) || 0
+      );
     });
 
     const downloadCard = async () => {
@@ -267,13 +275,13 @@ export default defineComponent({
       link.click();
     };
 
-    return { 
-      cardRef, 
-      downloadCard, 
-      totalStars, 
-      contributionWeeks, 
-      getContributionColor, 
-      formatContributionDate 
+    return {
+      cardRef,
+      downloadCard,
+      totalStars,
+      contributionWeeks,
+      getContributionColor,
+      formatContributionDate,
     };
   },
 });

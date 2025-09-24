@@ -4,11 +4,13 @@
       <AppHeader />
       <TerminalBox 
         :project-count="projectCount" 
-        :random-repo="randomRepo" 
+        :random-repo="randomRepo"
+        :selected-language="languageFilter" 
       />
       <ControlsSection
         v-model:username="username"
         v-model:selected-range="selectedRange"
+        @update:language="languageFilter = $event"
         :star-ranges="starRanges"
         @get-summary="getSummary"
         @get-random-repo="getRandomRepo"
@@ -108,10 +110,16 @@ export default defineComponent({
       error: '',
       selectedRange: { label: '51-500', min: 51, max: 500 },
       starRanges: starRanges,
+      // Prefetch and cancellation control
+      prefetchVersion: 0,
+      currentPrefetchController: null as AbortController | null,
+      reserveSize: 1,
+      // Legacy queue (kept for user summary throttling if needed)
       lastFetchTime: 0,
-      minRequestInterval: 2000, // Minimum time between requests in milliseconds (2 seconds)
+      minRequestInterval: 2000,
       fetchQueue: [] as Array<() => Promise<void>>,
       isProcessingQueue: false,
+      languageFilter: '' as string | null,
     };
   },
   computed: {
@@ -120,9 +128,23 @@ export default defineComponent({
     },
   },
   mounted() {
-    // Pre-fetch 2 repos when component is mounted
-    this.preFetchNextRepo();
-    this.preFetchNextRepo();
+    // On initial load, prefetch one repo in the background (do not display)
+    this.ensureReserve();
+  },
+  watch: {
+    // When star range changes, discard old reserve and cancel in-flight fetches
+    selectedRange: {
+      handler() {
+        this.discardReserveAndCancel();
+        this.ensureReserve();
+      },
+      deep: false,
+    },
+    // When language filter changes, discard old reserve and cancel in-flight fetches
+    languageFilter() {
+      this.discardReserveAndCancel();
+      this.ensureReserve();
+    },
   },
   methods: {
     async processQueue() {
@@ -176,22 +198,44 @@ export default defineComponent({
       this.getSummary();
     },
     
+    ensureReserve() {
+      if (this.preFetchedRepos.length >= this.reserveSize || this.isPreFetching) return;
+      this.preFetchNextRepo();
+    },
+    discardReserveAndCancel() {
+      this.preFetchedRepos = [];
+      this.randomRepo = null; // do not auto-display on star change
+      this.prefetchVersion += 1;
+      if (this.currentPrefetchController) {
+        try { this.currentPrefetchController.abort(); } catch {}
+      }
+      this.currentPrefetchController = null;
+    },
     async preFetchNextRepo() {
-      if (this.isPreFetching || this.preFetchedRepos.length >= 2) return;
-      
+      if (this.isPreFetching) return;
       this.isPreFetching = true;
+      const versionAtStart = this.prefetchVersion;
+      const controller = new AbortController();
+      this.currentPrefetchController = controller;
       try {
-        await this.enqueueRequest(async () => {
-          const params = {
-            minStars: this.selectedRange.min,
-            maxStars: this.selectedRange.max,
-          };
-          const repo = await githubApi.getRandomRepository(params);
-          this.preFetchedRepos.push(repo);
-        });
-      } catch (error) {
-        console.error('Error pre-fetching repository:', error);
+        const params = {
+          minStars: this.selectedRange?.min,
+          maxStars: this.selectedRange?.max,
+          language: this.languageFilter || undefined,
+        };
+        const repo = await githubApi.getRandomRepository(params, { signal: controller.signal });
+        // Ignore if a newer prefetch cycle has started
+        if (versionAtStart !== this.prefetchVersion) return;
+        this.preFetchedRepos.push(repo);
+      } catch (error: any) {
+        // Ignore cancellations; log other errors
+        if (!(error && (error.name === 'CanceledError' || error.code === 'ERR_CANCELED'))) {
+          console.error('Error pre-fetching repository:', error);
+        }
       } finally {
+        if (this.currentPrefetchController === controller) {
+          this.currentPrefetchController = null;
+        }
         this.isPreFetching = false;
       }
     },
@@ -202,29 +246,33 @@ export default defineComponent({
         this.randomRepo = null;
         this.user = null; // Clear user data when getting a random repo
 
-        // If we have pre-fetched repos, use one of them
+        // If we have a reserved repo, show it instantly and replenish in background
         if (this.preFetchedRepos.length > 0) {
           this.randomRepo = this.preFetchedRepos.shift() || null;
-          // Start pre-fetching the next repo in the background
-          this.preFetchNextRepo();
+          this.ensureReserve();
           return;
         }
 
-        // No pre-fetched repos, fetch one immediately
-        await this.enqueueRequest(async () => {
-          const params = {
-            minStars: this.selectedRange.min,
-            maxStars: this.selectedRange.max,
-          };
-          const repo = await githubApi.getRandomRepository(params);
-          this.randomRepo = repo;
-          
-          // Pre-fetch the next repo in the background
-          this.preFetchNextRepo();
-        });
-      } catch (error) {
+        // Otherwise fetch immediately (will display when ready), then start reserve
+        const immediateController = new AbortController();
+        const params = {
+          minStars: this.selectedRange?.min,
+          maxStars: this.selectedRange?.max,
+          language: this.languageFilter || undefined,
+        };
+        const repo = await githubApi.getRandomRepository(params, { signal: immediateController.signal });
+        this.randomRepo = repo;
+        this.ensureReserve();
+      } catch (error: unknown) {
         console.error('Error fetching random repository:', error);
-        this.error = 'Failed to fetch a random repository. Please try again.';
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const statusCode = (error as any)?.response?.status;
+        
+        if (errorMessage.includes('ThrottlerException') || statusCode === 429) {
+          this.error = 'Rate limit exceeded. Please wait a moment before trying again.';
+        } else {
+          this.error = 'Failed to fetch a random repository. Please try again.';
+        }
       } finally {
         this.loading = false;
       }
@@ -241,7 +289,7 @@ export default defineComponent({
       this.user = null; // Clear user data when starting a new search
 
       try {
-        this.user = await githubApi.getUserSummary(this.username);
+        this.user = await githubApi.getUserSummary(this.username, { limit: 12 });
       } catch (err) {
         this.error =
           err instanceof Error ? err.message : 'Failed to fetch user data';

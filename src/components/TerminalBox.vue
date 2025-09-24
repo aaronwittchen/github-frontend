@@ -4,7 +4,7 @@
       <span class="terminal-prefix">Ξ</span>
       <span class="terminal-path">~/projects</span>
       <span class="terminal-separator">→</span>
-      <span class="terminal-command">ls -la --sort=stars</span>
+      <span class="terminal-command">ls -la --sort=stars{{ selectedLanguage ? ' | grep ' + selectedLanguage : '' }}</span>
     </div>
     <div>
       <span class="terminal-info">[INFO]</span> Displaying
@@ -28,6 +28,10 @@ export default defineComponent({
     },
     randomRepo: {
       type: Object as () => Repository | null,
+      default: null,
+    },
+    selectedLanguage: {
+      type: [String, null] as unknown as () => string | null,
       default: null,
     },
   },

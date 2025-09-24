@@ -3,7 +3,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, onMounted, onUnmounted, computed } from 'vue';
+import {
+  defineComponent,
+  ref,
+  watch,
+  onMounted,
+  onUnmounted,
+  computed,
+} from 'vue';
 
 export default defineComponent({
   name: 'AnimatedCounter',
@@ -11,20 +18,20 @@ export default defineComponent({
     value: {
       type: Number,
       required: true,
-      default: 0
+      default: 0,
     },
     duration: {
       type: Number,
-      default: 1500 // Animation duration in milliseconds
+      default: 1500, // Animation duration in milliseconds
     },
     textClass: {
       type: String,
-      default: ''
+      default: '',
     },
     format: {
       type: Function,
-      default: (value: number) => value.toString()
-    }
+      default: (value: number) => value.toString(),
+    },
   },
   setup(props) {
     const currentValue = ref(0);
@@ -39,12 +46,14 @@ export default defineComponent({
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
-      
+
       const progress = Math.min((timestamp - startTime) / props.duration, 1);
       const easedProgress = easeOutQuad(progress);
-      
-      currentValue.value = Math.floor(startValue + (props.value - startValue) * easedProgress);
-      
+
+      currentValue.value = Math.floor(
+        startValue + (props.value - startValue) * easedProgress,
+      );
+
       if (progress < 1) {
         animationFrameId = requestAnimationFrame(animate);
       } else {
@@ -57,11 +66,11 @@ export default defineComponent({
       if (isAnimating.value) {
         cancelAnimationFrame(animationFrameId);
       }
-      
+
       isAnimating.value = true;
       startValue = currentValue.value;
       startTime = 0;
-      
+
       if (props.value !== startValue) {
         animationFrameId = requestAnimationFrame(animate);
       }
@@ -73,11 +82,14 @@ export default defineComponent({
       startAnimation();
     });
 
-    watch(() => props.value, (newVal, oldVal) => {
-      if (newVal !== oldVal) {
-        startAnimation();
-      }
-    });
+    watch(
+      () => props.value,
+      (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+          startAnimation();
+        }
+      },
+    );
 
     onUnmounted(() => {
       if (animationFrameId) {
@@ -91,8 +103,8 @@ export default defineComponent({
 
     return {
       currentValue,
-      formattedValue
+      formattedValue,
     };
-  }
+  },
 });
 </script>

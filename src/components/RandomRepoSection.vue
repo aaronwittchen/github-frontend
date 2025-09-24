@@ -59,6 +59,46 @@
             <div v-if="repo.description" class="repo-description">
               {{ repo.description }}
             </div>
+              <!-- Most used languages scale -->
+              <div v-if="repo.languages && repo.languages.length > 0" class="mt-4 space-y-2">
+                <div class="w-full h-2 bg-[#2a2a2a] rounded overflow-hidden border border-[#3a3a3a] flex">
+                  <div
+                    v-for="(lang, idx) in repo.languages"
+                    :key="idx"
+                    class="h-full"
+                    :style="{
+                      flexBasis: `${Math.max(0, Math.min(100, lang.percentage))}%`,
+                      backgroundColor: getLanguageColor(lang.name)
+                    }"
+                    :title="`${lang.name}: ${lang.percentage.toFixed(1)}%`"
+                  ></div>
+                </div>
+                <div class="flex flex-wrap gap-3 text-xs text-[#A89984]">
+                  <span
+                    v-for="(lang, idx) in repo.languages.slice(0, 6)"
+                    :key="`legend-${idx}`"
+                    class="inline-flex items-center gap-1"
+                  >
+                    <span class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: getLanguageColor(lang.name) }"></span>
+                    <span>{{ lang.name }} ({{ lang.percentage.toFixed(1) }}%)</span>
+                  </span>
+                </div>
+              </div>
+              <div v-else-if="repo.language" class="mt-4 space-y-2">
+                <div class="w-full h-2 bg-[#2a2a2a] rounded overflow-hidden border border-[#3a3a3a]">
+                  <div
+                    class="h-full"
+                    :style="{ width: '100%', backgroundColor: getLanguageColor(repo.language) }"
+                    :title="`${repo.language}: 100%`"
+                  ></div>
+                </div>
+                <div class="flex flex-wrap gap-3 text-xs text-[#A89984]">
+                  <span class="inline-flex items-center gap-1">
+                    <span class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: getLanguageColor(repo.language) }"></span>
+                    <span>{{ repo.language }} (100%)</span>
+                  </span>
+                </div>
+              </div>
             <div class="repo-meta">
               <span class="repo-stat">
                 <svg
@@ -151,7 +191,13 @@
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             ></path>
           </svg>
-          README
+          <a
+            :href="repo.htmlUrl"
+            target="_blank"
+            class="hover:underline"
+          >
+            README
+          </a>
         </h2>
       </div>
       <div class="flex-1 overflow-hidden bg-[#232323]">

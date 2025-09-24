@@ -1,8 +1,8 @@
 const { defineConfig } = require('@vue/cli-service');
 
 module.exports = defineConfig({
-  transpileDependencies: true,
-  lintOnSave: 'warning', // Show lint errors as warnings during development
+  transpileDependencies: false,
+  lintOnSave: false,
   chainWebpack: (config) => {
     // Add file-loader for images
     config.module
@@ -12,7 +12,7 @@ module.exports = defineConfig({
       .loader('file-loader')
       .options({
         name: 'img/[name].[hash:8].[ext]',
-        esModule: false
+        esModule: false,
       });
-  }
+  },
 });

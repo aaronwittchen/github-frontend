@@ -11,9 +11,11 @@ const apiClient = axios.create({
 // API service methods
 export const githubApi = {
   // Get user summary
-  async getUserSummary(username: string) {
+  async getUserSummary(username: string, options?: { limit?: number }) {
     try {
-      const response = await apiClient.get(`/v1/users/${username}/summary`);
+      const response = await apiClient.get(`/v1/users/${username}/summary`, {
+        params: { limit: options?.limit }
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -56,17 +58,25 @@ export const githubApi = {
   },
 
   // Get random repository with optional star range
-  async getRandomRepository(params?: { minStars?: number; maxStars?: number }) {
+  async getRandomRepository(
+    params?: { minStars?: number; maxStars?: number; language?: string },
+    options?: { signal?: AbortSignal }
+  ) {
     try {
       const response = await apiClient.get('/v1/repositories/random', { 
         params: {
           min_stars: params?.minStars,
-          max_stars: params?.maxStars
-        }
+          max_stars: params?.maxStars,
+          language: params?.language,
+        },
+        signal: options?.signal
       });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        if (error.name === 'CanceledError' || (error as any)?.code === 'ERR_CANCELED') {
+          throw error; // surface cancellation for callers to handle/ignore
+        }
         throw new Error(error.response?.data?.message || 'Failed to fetch random repository');
       }
       throw error;

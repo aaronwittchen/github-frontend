@@ -72,6 +72,18 @@ const error = ref("");
 
 const readmeHtml = ref("");
 
+// Properly decode base64-encoded UTF-8 strings
+const decodeBase64Utf8 = (b64: string): string => {
+  const clean = b64.replace(/\s/g, '');
+  const binary = atob(clean);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const decoder = new TextDecoder('utf-8');
+  return decoder.decode(bytes);
+};
+
 // Function to parse markdown asynchronously
 const parseMarkdown = async (content: string) => {
   if (!content) return "";
@@ -141,10 +153,17 @@ const fetchReadme = async () => {
       const data = await response.json();
       if (data.content) {
         // If content is base64 encoded (common in GitHub API)
-        const content = typeof data.content === 'string' 
-          ? atob(data.content.replace(/\s/g, '')) 
-          : JSON.stringify(data.content, null, 2);
-        readmeContent.value = content;
+        if (typeof data.content === 'string') {
+          try {
+            // Prefer UTF-8 safe decoding
+            readmeContent.value = decodeBase64Utf8(data.content);
+          } catch (e) {
+            // Fallback to plain atob if something unexpected occurs
+            readmeContent.value = atob(data.content.replace(/\s/g, ''));
+          }
+        } else {
+          readmeContent.value = JSON.stringify(data.content, null, 2);
+        }
       } else if (data.data && typeof data.data === 'string') {
         // If content is nested in a data property
         readmeContent.value = data.data;
@@ -270,6 +289,21 @@ onMounted(() => {
   text-decoration: underline;
 }
 
+/* Centered badge rows like <p align="center"> ...badges... </p> */
+.markdown-body p[align="center"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+.markdown-body p[align="center"] a {
+  display: inline-flex;
+}
+.markdown-body p[align="center"] img {
+  display: block;
+}
+
 /* Code */
 .markdown-body code {
   padding: 0.2em 0.4em;
@@ -308,6 +342,22 @@ onMounted(() => {
   margin-top: 0;
   margin-bottom: 16px;
   padding-left: 2em;
+}
+
+/* Ensure bullets/numbers are visible like GitHub */
+.markdown-body ul {
+  list-style-type: disc;
+  list-style-position: outside;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+  list-style-position: outside;
+}
+.markdown-body ul ul {
+  list-style-type: circle;
+}
+.markdown-body ul ul ul {
+  list-style-type: square;
 }
 
 .markdown-body li {
