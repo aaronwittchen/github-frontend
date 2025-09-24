@@ -86,7 +86,7 @@
                 </div>
               </div>
               <div v-else-if="repo.language" class="mt-4 space-y-2">
-                <div class="w-full h-2 bg-[#2a2a2a] rounded overflow-hidden border border-[#3a3a3a]">
+                <div class="w-5/6 h-2 bg-[#2a2a2a] rounded overflow-hidden border border-[#3a3a3a] mx-auto">
                   <div
                     class="h-full"
                     :style="{ width: '100%', backgroundColor: getLanguageColor(repo.language) }"
@@ -100,7 +100,7 @@
                   </span>
                 </div>
               </div>
-            <div class="repo-meta">
+            <div class="repo-meta mt-1">
               <span class="repo-stat">
                 <svg
                   class="repo-stat-icon text-yellow-400"
@@ -128,15 +128,6 @@
                   />
                 </svg>
                 {{ repo.forks.toLocaleString() }}
-              </span>
-              <span v-if="repo.language" class="flex items-center">
-                <span
-                  class="w-3 h-3 rounded-full mr-1"
-                  :style="{
-                    backgroundColor: getLanguageColor(repo.language),
-                  }"
-                ></span>
-                {{ repo.language }}
               </span>
               <span class="flex items-center">
                 <svg

@@ -6,20 +6,22 @@
   >
     <!-- Title and status row -->
     <div class="flex justify-between items-center mb-2">
-      <div class="flex items-center gap-2">
-        <span class="text-[#FFB86C]">&lt;&gt;</span>
-        <span
-          :class="statusClass"
-          class="border px-2 py-0.5 text-xs text-[#A89984]"
-        >
-          {{ isRecentlyUpdated(repo.updatedAt) ? 'in progress' : 'active' }}
-        </span>
-      </div>
-      <div class="flex items-center text-[#FFB86C] text-sm">
-        <span>★</span>
-        <span class="ml-1">{{ repo.stars }}</span>
-      </div>
-    </div>
+  <div class="flex items-center gap-2">
+    <span class="text-[#FFB86C]">&lt;&gt;</span>
+    <span
+      :class="[
+        'border px-2 py-0.5 text-xs',
+        isRecentlyUpdated(repo.updatedAt) ? 'text-yellow-400' : 'text-green-400'
+      ]"
+    >
+      {{ isRecentlyUpdated(repo.updatedAt) ? 'in progress' : 'active' }}
+    </span>
+  </div>
+  <div class="flex items-center text-[#FFB86C] text-sm">
+    <span>★</span>
+    <span class="ml-1">{{ repo.stars }}</span>
+  </div>
+</div>
 
     <!-- Repository name -->
     <h4 class="text-lg font-semibold text-[#FFB86C] mb-2">{{ repo.name }}</h4>
@@ -215,7 +217,7 @@ export default defineComponent({
       }).format(date);
     };
 
-  return { isRecentlyUpdated, formatDate, statusClass, getLanguageColor };
+  return { isRecentlyUpdated, formatDate, statusClass, getLanguageColor, copyButtonText, copyToClipboard };
   },
 });
 </script>

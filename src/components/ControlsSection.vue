@@ -1,17 +1,17 @@
 <template>
   <div class="w-full mb-8">
-    <!-- Input and Get Summary button in their own row on small screens -->
-    <div class="flex flex-col sm:flex-row gap-4 w-full mb-4">
-      <div class="flex w-full gap-2 h-14">
+    <!-- Input and Get Summary button - stacked on mobile, side by side on larger screens -->
+    <div class="w-full mb-4">
+      <div class="flex flex-col sm:flex-row gap-2 w-full">
         <input
           type="text"
           placeholder="Enter GitHub username"
-          class="form-input flex-1 h-full"
+          class="form-input w-full h-12 sm:h-14 sm:flex-1"
           :value="username"
           @input="handleUsernameInput"
         />
         <button 
-          class="btn-primary whitespace-nowrap h-full px-4"
+          class="btn-primary whitespace-nowrap h-12 sm:h-14 w-full sm:w-auto px-4 text-sm sm:text-base"
           @click="$emit('getSummary')"
         >
           Get Summary

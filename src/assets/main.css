@@ -17,16 +17,19 @@
     @apply bg-[#131516] text-current border-2 border-[#924c00] rounded-none p-2 focus:outline-none focus:ring-2 focus:ring-[#924c00];
   }
 
-  /* Fonts */
   .font-mono {
-    font-family: FiraCode Nerd Font, Fira Code, JetBrains Mono, Hack, monospace;
+    font-family:
+      FiraCode Nerd Font,
+      Fira Code,
+      JetBrains Mono,
+      Hack,
+      monospace;
   }
 
   .devlogs-text {
     font-family: 'BigBlue Nerd Font', monospace;
   }
 
-  /* Animations */
   .terminal-blinking-cursor {
     animation: blink 1s step-end infinite;
     color: #ffb86c;
@@ -42,7 +45,6 @@
     }
   }
 
-  /* App Layout */
   .app-container {
     @apply min-h-screen flex flex-col px-4 sm:px-8 pb-12;
   }
@@ -51,7 +53,6 @@
     @apply w-full max-w-4xl mx-auto text-[#A89984] text-sm;
   }
 
-  /* Header */
   .app-header {
     @apply flex items-center mb-6 mt-2;
   }
@@ -64,7 +65,6 @@
     @apply text-2xl sm:text-3xl font-bold font-mono text-[#e5e7eb] devlogs-text;
   }
 
-  /* Terminal Box */
   .terminal-box {
     @apply border border-[#FFB86C] rounded-lg bg-[#232323] p-4 font-mono text-sm text-[#A89984] mb-6;
   }
@@ -93,7 +93,6 @@
     @apply text-[#55e06c];
   }
 
-  /* Form Controls */
   .form-input {
     @apply flex-grow w-full px-4 py-2 rounded-lg bg-[#232323] text-[#A89984] border border-[#FFB86C] 
            focus:outline-none focus:ring-2 focus:ring-[#FFB86C] font-mono text-sm;
@@ -109,7 +108,7 @@
   }
 
   .select-input {
-    @apply px-3 py-4 rounded-lg bg-[#232323] text-[#A89984] border-2 border-[#FFB86C] 
+    @apply px-3 py-4 rounded-lg bg-[#232323] text-[#A89984] border border-[#FFB86C] 
            focus:outline-none focus:ring-2 focus:ring-[#FFB86C] font-mono text-sm appearance-none
            transition-colors duration-200 cursor-pointer;
 
@@ -117,7 +116,7 @@
     -moz-appearance: none;
     appearance: none;
 
-    /* Dropdown arrow */
+    /* Custom arrow using SVG data URI */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FFB86C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
@@ -125,7 +124,7 @@
     padding-right: 2.5rem;
 
     /* Accent color for selected option in modern browsers */
-    accent-color: #FFB86C;
+    accent-color: #ffb86c;
   }
 
   /* Remove default arrow in IE10/11 */
@@ -136,21 +135,18 @@
   /* Fix selected highlight color on focus */
   .select-input:focus {
     @apply ring-2 ring-[#FFB86C] border-[#FFB86C];
-    color: #A89984;
+    color: #a89984;
     background-color: #232323;
   }
 
-  /* Loading State */
   .loading-spinner {
     @apply inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FFB86C];
   }
 
-  /* Error State */
   .error-message {
     @apply bg-[#232323] border border-[#FFB86C] rounded-lg text-[#FFB86C] px-6 py-4 mb-8 text-center font-mono text-sm;
   }
 
-  /* Repository Card */
   .repo-card {
     @apply border border-[#FFB86C] rounded-lg overflow-hidden flex-1 flex flex-col min-h-0;
   }
@@ -187,7 +183,6 @@
     @apply text-xs text-gray-500 mt-2;
   }
 
-  /* Business Card */
   .business-card {
     @apply w-[420px] bg-[#232323] border-2 border-[#FFB86C] rounded-xl p-6 font-mono text-gray-200 shadow-lg;
   }

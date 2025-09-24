@@ -2,8 +2,8 @@
   <div class="app-container">
     <div class="content-container">
       <AppHeader />
-      <TerminalBox 
-        :project-count="projectCount" 
+      <TerminalBox
+        :project-count="projectCount"
         :random-repo="randomRepo"
         :selected-language="languageFilter"
         :selected-country="country"
@@ -30,9 +30,9 @@
       </div>
 
       <!-- Random Repo Section -->
-      <RandomRepoSection 
-        v-if="randomRepo" 
-        :repo="randomRepo" 
+      <RandomRepoSection
+        v-if="randomRepo"
+        :repo="randomRepo"
         @close="randomRepo = null"
         @search-owner="searchOwner"
       />
@@ -152,15 +152,15 @@ export default defineComponent({
   methods: {
     async processQueue() {
       if (this.isProcessingQueue || this.fetchQueue.length === 0) return;
-      
+
       this.isProcessingQueue = true;
       const now = Date.now();
       const timeSinceLastFetch = now - this.lastFetchTime;
       const delay = Math.max(0, this.minRequestInterval - timeSinceLastFetch);
-      
+
       // Wait for the required delay
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
       const nextRequest = this.fetchQueue.shift();
       if (nextRequest) {
         try {
@@ -171,15 +171,15 @@ export default defineComponent({
           this.lastFetchTime = Date.now();
         }
       }
-      
+
       this.isProcessingQueue = false;
-      
+
       // Process next item in queue if any
       if (this.fetchQueue.length > 0) {
         this.processQueue();
       }
     },
-    
+
     enqueueRequest(request: () => Promise<void>): Promise<void> {
       return new Promise((resolve, reject) => {
         const wrappedRequest = async () => {
@@ -190,19 +190,20 @@ export default defineComponent({
             reject(error);
           }
         };
-        
+
         this.fetchQueue.push(wrappedRequest);
         this.processQueue();
       });
     },
-    
+
     searchOwner(owner: string) {
       this.username = owner;
       this.getSummary();
     },
-    
+
     ensureReserve() {
-      if (this.preFetchedRepos.length >= this.reserveSize || this.isPreFetching) return;
+      if (this.preFetchedRepos.length >= this.reserveSize || this.isPreFetching)
+        return;
       this.preFetchNextRepo();
     },
     discardReserveAndCancel() {
@@ -210,7 +211,9 @@ export default defineComponent({
       this.randomRepo = null; // do not auto-display on star change
       this.prefetchVersion += 1;
       if (this.currentPrefetchController) {
-        try { this.currentPrefetchController.abort(); } catch {}
+        try {
+          this.currentPrefetchController.abort();
+        } catch {}
       }
       this.currentPrefetchController = null;
     },
@@ -227,13 +230,20 @@ export default defineComponent({
           language: this.languageFilter || undefined,
           country: this.country || undefined,
         };
-        const repo = await githubApi.getRandomRepository(params, { signal: controller.signal });
+        const repo = await githubApi.getRandomRepository(params, {
+          signal: controller.signal,
+        });
         // Ignore if a newer prefetch cycle has started
         if (versionAtStart !== this.prefetchVersion) return;
         this.preFetchedRepos.push(repo);
       } catch (error: any) {
         // Ignore cancellations; log other errors
-        if (!(error && (error.name === 'CanceledError' || error.code === 'ERR_CANCELED'))) {
+        if (
+          !(
+            error &&
+            (error.name === 'CanceledError' || error.code === 'ERR_CANCELED')
+          )
+        ) {
           console.error('Error pre-fetching repository:', error);
         }
       } finally {
@@ -265,18 +275,23 @@ export default defineComponent({
           language: this.languageFilter || undefined,
           country: this.country || undefined,
         };
-        const repo = await githubApi.getRandomRepository(params, { signal: immediateController.signal });
+        const repo = await githubApi.getRandomRepository(params, {
+          signal: immediateController.signal,
+        });
         this.randomRepo = repo;
         this.ensureReserve();
       } catch (error: unknown) {
         console.error('Error fetching random repository:', error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         const statusCode = (error as any)?.response?.status;
-        
+
         if (errorMessage.includes('ThrottlerException') || statusCode === 429) {
-          this.error = 'Rate limit exceeded. Please wait a moment before trying again.';
+          this.error =
+            'Rate limit exceeded. Please wait a moment before trying again.';
         } else if (errorMessage.includes('No repositories found')) {
-          this.error = 'No repositories found matching the criteria. Please try different filters.';
+          this.error =
+            'No repositories found matching the criteria. Please try different filters.';
         } else {
           this.error = 'Failed to fetch a random repository. Please try again.';
         }
@@ -296,7 +311,9 @@ export default defineComponent({
       this.user = null; // Clear user data when starting a new search
 
       try {
-        this.user = await githubApi.getUserSummary(this.username, { limit: 12 });
+        this.user = await githubApi.getUserSummary(this.username, {
+          limit: 12,
+        });
       } catch (err) {
         this.error =
           err instanceof Error ? err.message : 'Failed to fetch user data';

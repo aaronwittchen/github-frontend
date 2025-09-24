@@ -17,7 +17,6 @@ export default defineComponent({
   props: {
     value: {
       type: Number,
-      required: true,
       default: 0,
     },
     duration: {
@@ -50,7 +49,7 @@ export default defineComponent({
       const progress = Math.min((timestamp - startTime) / props.duration, 1);
       const easedProgress = easeOutQuad(progress);
 
-      currentValue.value = Math.floor(
+      currentValue.value = Math.round(
         startValue + (props.value - startValue) * easedProgress,
       );
 

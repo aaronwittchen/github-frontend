@@ -1,10 +1,9 @@
 const { defineConfig } = require('@vue/cli-service');
 
 module.exports = defineConfig({
-  transpileDependencies: false,
+  transpileDependencies: true,
   lintOnSave: false,
   chainWebpack: (config) => {
-    // Add file-loader for images
     config.module
       .rule('images')
       .test(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/)
