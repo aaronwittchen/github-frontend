@@ -127,34 +127,6 @@ The frontend communicates with a backend API that interfaces with the GitHub API
 
 ---
 
-## Customization
-
-### Styling
-
-Tailwind CSS is used for styling. Customize the theme in `tailwind.config.js`:
-
-```javascript
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        primary: '#2D3748',
-        secondary: '#4A5568',
-        // Add custom colors here
-      }
-    }
-  }
-}
-```
-
-### Environment Variables
-
-| Variable           | Description              | Default                                                |
-| ------------------ | ------------------------ | ------------------------------------------------------ |
-| VUE\_APP\_API\_URL | Base URL for backend API | [http://localhost:3000/api](http://localhost:3000/api) |
-
----
-
 ## Testing
 
 ```bash
